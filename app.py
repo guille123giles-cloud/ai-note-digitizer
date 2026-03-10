@@ -2,86 +2,110 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- CONFIGURACIÓN ---
-st.set_page_config(page_title="Traductor de Blasko", page_icon="📝", layout="centered")
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(
+    page_title="AI Document Digitizer", 
+    page_icon="📑", 
+    layout="wide"
+)
 
-# Configurar la IA usando la clave secreta que guardamos
-try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Usamos Flash 1.5 que es rapidísimo y excelente para leer imágenes
-    modelo = genai.GenerativeModel('gemini-2.5-flash')
-except Exception:
-    st.error("⚠️ Falta configurar la API Key en la carpeta .streamlit/secrets.toml")
+# --- ESTILOS PERSONALIZADOS ---
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f5f7f9;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 5px;
+        height: 3em;
+        background-color: #007bff;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- INTERFAZ ---
-st.title("El Traductor del virgo de Blasko")
-st.markdown("Aprende a escribir bien Blasko la concha de tu madre.")
+# --- INICIALIZACIÓN DE IA ---
+def init_gemini():
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+            return genai.GenerativeModel('gemini-2.5-flash')
+        else:
+            st.warning("⚠️ Clave de API no detectada. Configure 'GEMINI_API_KEY' en sus secretos.")
+            return None
+    except Exception as e:
+        st.error(f"Error de configuración: {e}")
+        return None
+
+modelo = init_gemini()
+
+# --- INTERFAZ DE USUARIO ---
+st.title("📑 Digitalizador de Apuntes Pro")
+st.markdown("Transforme sus notas manuscritas en texto digital estructurado y corregido mediante Inteligencia Artificial.")
 st.divider()
 
-# ... (tu código de configuración de arriba queda exactamente igual)
-
 # Subida de archivo
-archivo_subido = st.file_uploader("Cargá la foto de la hoja", type=["jpg", "jpeg", "png"])
+archivo_subido = st.file_uploader("Cargue una imagen del documento (JPG, PNG)", type=["jpg", "jpeg", "png"])
 
 if archivo_subido:
-    # 1. Abrimos y optimizamos la imagen para que sea rápido
+    # Optimización de imagen
     imagen = Image.open(archivo_subido)
     max_dimension = 1600
     if max(imagen.size) > max_dimension:
         imagen.thumbnail((max_dimension, max_dimension))
     
-    st.divider() # Línea separadora estética
-    
-    # 2. Creamos dos columnas: Mitad izquierda (foto) y mitad derecha (texto)
-    col_izq, col_der = st.columns(2)
+    # Diseño de dos columnas
+    col_izq, col_der = st.columns([1, 1], gap="large")
     
     with col_izq:
-        st.markdown("### Apunte de Blasko")
-        st.image(imagen, use_container_width=True)
+        st.subheader("🖼️ Documento Original")
+        st.image(imagen, use_container_width=True, caption="Imagen cargada")
 
     with col_der:
-        st.markdown("### Texto Limpio")
+        st.subheader("📝 Texto Digitalizado")
         
-        # 1. INVENTAMOS LA MEMORIA: Si no existe, la creamos vacía
         if "texto_final" not in st.session_state:
             st.session_state.texto_final = ""
         
-        # El botón ahora está en la columna derecha
-        if st.button("Descifrar que mierda dice", use_container_width=True):
-            with st.spinner("Traduciendo..."):
-                try:
-                    # Las instrucciones estrictas para mantener los renglones
-                    instrucciones = """
-                    Actúa como un motor de extracción de texto estricto. 
-                    Tu único objetivo es transcribir y corregir la ortografía de la imagen adjunta, respetando ABSOLUTAMENTE la estructura física.
-                    REGLAS:
-                    1. Por cada renglón físico que veas en el papel, debes generar exactamente un salto de línea en tu respuesta.
-                    2. Si una oración se corta a la mitad en la foto porque se terminó el papel, tu texto DEBE cortarse exactamente en esa misma palabra.
-                    3. Corrige la ortografía y gramática, pero NO unas líneas ni agrupes en párrafos.
-                    Devuelve únicamente el texto crudo resultante, línea por línea.
-                    """
-                    
-                    # Llamamos a la IA
-                    respuesta = modelo.generate_content([instrucciones, imagen])
-                    
-                    # 2. GUARDAMOS EN MEMORIA el resultado, en vez de una variable temporal
-                    st.session_state.texto_final = respuesta.text
-                    
-                    st.success("¡Éxito!")
-                    
-                except Exception as e:
-                    st.error(f"Ocurrió un error: {e}")
+        if st.button("Procesar e iniciar extracción"):
+            if modelo:
+                with st.spinner("Analizando caligrafía y estructurando texto..."):
+                    try:
+                        # Prompt profesional y preciso
+                        instrucciones = """
+                        Actúa como un experto en transcripción y paleografía digital.
+                        Tu tarea es extraer el texto de la imagen adjunta siguiendo estas reglas:
+                        1. Fidelidad Estructural: Mantén la disposición original de las líneas. Si una línea termina abruptamente, respeta ese salto.
+                        2. Corrección Gramatical: Corrige errores ortográficos evidentes sin alterar el significado técnico.
+                        3. Formato Limpio: No agregues comentarios personales ni introducciones. 
+                        4. Output: Devuelve solo el texto transcrito de forma clara y legible.
+                        """
+                        
+                        respuesta = modelo.generate_content([instrucciones, imagen])
+                        st.session_state.texto_final = respuesta.text
+                        st.success("Digitalización completada con éxito.")
+                        
+                    except Exception as e:
+                        st.error(f"Error durante el procesamiento: {e}")
+            else:
+                st.error("El modelo no está inicializado. Verifique su API Key.")
         
-        # 3. LO SACAMOS AFUERA: Esto se muestra solo si la memoria tiene texto guardado
+        # Área de edición y descarga
         if st.session_state.texto_final:
-            # Mostramos el texto en una caja grande para que lo leas cómodo
-            st.text_area("Resultado (Podés editarlo si querés):", value=st.session_state.texto_final, height=400, label_visibility="collapsed")
-            
-            # Agregamos el botón mágico para guardar el archivo
-            st.download_button(
-                label="Descargar como archivo .txt",
-                data=st.session_state.texto_final,
-                file_name="apunte_traducido.txt",
-                mime="text/plain",
-                use_container_width=True
+            texto_editado = st.text_area(
+                "Edite el resultado si es necesario:", 
+                value=st.session_state.texto_final, 
+                height=400
             )
+            
+            st.download_button(
+                label="📥 Descargar como archivo .txt",
+                data=texto_editado,
+                file_name="documento_digitalizado.txt",
+                mime="text/plain"
+            )
+
+# --- PIE DE PÁGINA ---
+st.divider()
+st.caption("Desarrollado con Streamlit y Google Gemini 2.5 Flash")
