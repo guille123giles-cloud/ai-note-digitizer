@@ -27,7 +27,7 @@ def init_gemini():
     try:
         if "GEMINI_API_KEY" in st.secrets:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            return genai.GenerativeModel('gemini-2.5-flash')
+            return genai.GenerativeModel('gemini-1.5-flash')
         else:
             st.warning("⚠️ Clave de API no detectada. Configure 'GEMINI_API_KEY' en sus secretos.")
             return None
@@ -96,4 +96,5 @@ if archivo_subido:
                 file_name="documento_digitalizado.txt",
                 mime="text/plain"
             )
+
 
