@@ -1,4 +1,4 @@
-# 📑 Digitalizador de Apuntes Pro
+# Digitalizador de Apuntes Pro
 
 Una herramienta potente y minimalista desarrollada en **Python** y **Streamlit** que utiliza la API de **Google Gemini** para transformar fotos de apuntes manuscritos en texto digital estructurado.
 
@@ -8,7 +8,7 @@ Una herramienta potente y minimalista desarrollada en **Python** y **Streamlit**
 
 ---
 
-## 🔥 Funcionalidades
+## Funcionalidades
 
 * **OCR de Alta Precisión:** Interpretación de caligrafía compleja mediante el modelo `gemini-2.5-flash`.
 * **Fidelidad Estructural:** Mantiene el formato original de las líneas y párrafos.
@@ -16,7 +16,7 @@ Una herramienta potente y minimalista desarrollada en **Python** y **Streamlit**
 * **Interfaz Interactiva:** Visualización en paralelo (Original vs. Digitalizado) y editor de texto integrado.
 * **Exportación Rápida:** Descarga el resultado directamente en formato `.txt`.
 
-## 🛠️ Instalación y Configuración
+## Instalación y Configuración
 
 Sigue estos pasos para correr el proyecto localmente:
 
