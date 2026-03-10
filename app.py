@@ -2,14 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
     page_title="AI Document Digitizer", 
     page_icon="📑", 
     layout="wide"
 )
 
-# --- ESTILOS PERSONALIZADOS ---
 st.markdown("""
     <style>
     .main {
@@ -25,7 +23,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- INICIALIZACIÓN DE IA ---
 def init_gemini():
     try:
         if "GEMINI_API_KEY" in st.secrets:
@@ -40,22 +37,18 @@ def init_gemini():
 
 modelo = init_gemini()
 
-# --- INTERFAZ DE USUARIO ---
 st.title("📑 Digitalizador de Apuntes Pro")
 st.markdown("Transforme sus notas manuscritas en texto digital estructurado y corregido mediante Inteligencia Artificial.")
 st.divider()
 
-# Subida de archivo
 archivo_subido = st.file_uploader("Cargue una imagen del documento (JPG, PNG)", type=["jpg", "jpeg", "png"])
 
 if archivo_subido:
-    # Optimización de imagen
     imagen = Image.open(archivo_subido)
     max_dimension = 1600
     if max(imagen.size) > max_dimension:
         imagen.thumbnail((max_dimension, max_dimension))
     
-    # Diseño de dos columnas
     col_izq, col_der = st.columns([1, 1], gap="large")
     
     with col_izq:
@@ -72,7 +65,6 @@ if archivo_subido:
             if modelo:
                 with st.spinner("Analizando caligrafía y estructurando texto..."):
                     try:
-                        # Prompt profesional y preciso
                         instrucciones = """
                         Actúa como un experto en transcripción y paleografía digital.
                         Tu tarea es extraer el texto de la imagen adjunta siguiendo estas reglas:
@@ -91,7 +83,6 @@ if archivo_subido:
             else:
                 st.error("El modelo no está inicializado. Verifique su API Key.")
         
-        # Área de edición y descarga
         if st.session_state.texto_final:
             texto_editado = st.text_area(
                 "Edite el resultado si es necesario:", 
@@ -106,6 +97,3 @@ if archivo_subido:
                 mime="text/plain"
             )
 
-# --- PIE DE PÁGINA ---
-st.divider()
-st.caption("Desarrollado con Streamlit y Google Gemini 2.5 Flash")
